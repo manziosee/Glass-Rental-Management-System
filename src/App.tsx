@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import Login from './components/Login';
+import AuthForm from './components/AuthForm';
 import Dashboard from './components/Dashboard';
 import Sidebar from './components/Sidebar';
 import CustomerManagement from './components/CustomerManagement';
 import GlasswareManagement from './components/GlasswareManagement';
 import OrderManagement from './components/OrderManagement';
+import InventoryOverview from './components/InventoryOverview';
 import Reports from './components/Reports';
 import { Customer, Glassware, Order, DashboardStats } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
@@ -49,26 +50,98 @@ function App() {
       const sampleGlassware: Glassware[] = [
         {
           id: '1',
-          type: 'Wine Glass',
-          description: 'Elegant crystal wine glasses perfect for formal events',
-          quantityAvailable: 150,
-          pricePerUnit: 2.50,
+          type: 'Beer Glass',
+          description: 'Premium beer glasses - Individual rental',
+          quantityAvailable: 240,
+          pricePerUnit: 400,
           createdAt: new Date().toISOString(),
         },
         {
           id: '2',
-          type: 'Champagne Flute',
-          description: 'Premium champagne flutes for celebrations',
-          quantityAvailable: 100,
-          pricePerUnit: 3.00,
+          type: 'Wine Glass',
+          description: 'Elegant wine glasses - Individual rental',
+          quantityAvailable: 144,
+          pricePerUnit: 450,
           createdAt: new Date().toISOString(),
         },
         {
           id: '3',
           type: 'Cocktail Glass',
-          description: 'Stylish cocktail glasses for mixology events',
-          quantityAvailable: 75,
-          pricePerUnit: 2.75,
+          description: 'Stylish cocktail glasses - Individual rental',
+          quantityAvailable: 144,
+          pricePerUnit: 500,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '4',
+          type: 'Beer Glass Small Box',
+          description: 'Beer glasses small box (6 glasses)',
+          quantityAvailable: 40,
+          pricePerUnit: 2400,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '5',
+          type: 'Beer Glass Large Box',
+          description: 'Beer glasses large box (48 glasses = 8 small boxes)',
+          quantityAvailable: 5,
+          pricePerUnit: 19200,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '6',
+          type: 'Wine Glass Small Box',
+          description: 'Wine glasses small box (6 glasses)',
+          quantityAvailable: 24,
+          pricePerUnit: 2700,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '7',
+          type: 'Wine Glass Large Box',
+          description: 'Wine glasses large box (48 glasses = 8 small boxes)',
+          quantityAvailable: 3,
+          pricePerUnit: 21600,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '8',
+          type: 'Cocktail Glass Small Box',
+          description: 'Cocktail glasses small box (6 glasses)',
+          quantityAvailable: 24,
+          pricePerUnit: 4000,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '9',
+          type: 'Cocktail Glass Large Box',
+          description: 'Cocktail glasses large box (48 glasses = 8 small boxes)',
+          quantityAvailable: 3,
+          pricePerUnit: 32000,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '10',
+          type: 'Champagne Glass',
+          description: 'Premium champagne flutes - Individual rental',
+          quantityAvailable: 96,
+          pricePerUnit: 450,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '11',
+          type: 'Champagne Glass Small Box',
+          description: 'Champagne glasses small box (6 glasses)',
+          quantityAvailable: 16,
+          pricePerUnit: 2700,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '12',
+          type: 'Champagne Glass Large Box',
+          description: 'Champagne glasses large box (48 glasses = 8 small boxes)',
+          quantityAvailable: 2,
+          pricePerUnit: 21600,
           createdAt: new Date().toISOString(),
         },
       ];
@@ -217,13 +290,15 @@ function App() {
   };
 
   if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} />;
+    return <AuthForm onLogin={handleLogin} />;
   }
 
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'dashboard':
         return <Dashboard stats={getDashboardStats()} />;
+      case 'inventory':
+        return <InventoryOverview glassware={glassware} />;
       case 'customers':
         return (
           <CustomerManagement
@@ -261,13 +336,13 @@ function App() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-100">
       <Sidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
         onLogout={handleLogout}
       />
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto bg-gray-50">
         {renderActiveSection()}
       </div>
     </div>

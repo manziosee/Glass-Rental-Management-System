@@ -30,10 +30,16 @@ export function downloadCSV(data: any[], filename: string) {
 }
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('rw-RW', {
     style: 'currency',
-    currency: 'USD'
+    currency: 'RWF',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(amount);
+}
+
+export function formatRWF(amount: number): string {
+  return `${amount.toLocaleString('en-US')} RWF`;
 }
 
 export function formatDate(dateString: string): string {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, Search, Package } from 'lucide-react';
 import { Glassware } from '../types';
 import Modal from './Modal';
-import { formatCurrency, formatDate } from '../utils/csvExport';
+import { formatRWF, formatDate } from '../utils/csvExport';
 
 interface GlasswareManagementProps {
   glassware: Glassware[];
@@ -34,12 +34,17 @@ export default function GlasswareManagement({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingGlassware) {
-      onUpdateGlassware(editingGlassware.id, formData);
-    } else {
-      onAddGlassware(formData);
+    try {
+      if (editingGlassware) {
+        onUpdateGlassware(editingGlassware.id, formData);
+      } else {
+        onAddGlassware(formData);
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('An error occurred. Please try again.');
     }
-    handleCloseModal();
   };
 
   const handleEdit = (item: Glassware) => {
@@ -150,7 +155,7 @@ export default function GlasswareManagement({
                       <div className="text-sm text-gray-900">{item.quantityAvailable} units</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{formatCurrency(item.pricePerUnit)}</div>
+                      <div className="text-sm text-gray-900">{formatRWF(item.pricePerUnit)}</div>
                       <div className="text-sm text-gray-500">per unit</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -241,16 +246,16 @@ export default function GlasswareManagement({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Price per Unit ($)
+                Price per Unit (RWF)
               </label>
               <input
                 type="number"
                 required
                 min="0"
-                step="0.01"
+                step="1"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.pricePerUnit}
-                onChange={(e) => setFormData({ ...formData, pricePerUnit: parseFloat(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, pricePerUnit: parseInt(e.target.value) })}
               />
             </div>
           </div>

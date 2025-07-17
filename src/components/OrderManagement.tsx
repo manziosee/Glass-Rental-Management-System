@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, Search, Calendar, User, Package } from 'lucide-react';
 import { Order, Customer, Glassware } from '../types';
 import Modal from './Modal';
-import { formatCurrency, formatDate } from '../utils/csvExport';
+import { formatRWF, formatDate } from '../utils/csvExport';
 
 interface OrderManagementProps {
   orders: Order[];
@@ -43,12 +43,17 @@ export default function OrderManagement({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingOrder) {
-      onUpdateOrder(editingOrder.id, formData);
-    } else {
-      onAddOrder(formData);
+    try {
+      if (editingOrder) {
+        onUpdateOrder(editingOrder.id, formData);
+      } else {
+        onAddOrder(formData);
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('An error occurred. Please try again.');
     }
-    handleCloseModal();
   };
 
   const handleEdit = (order: Order) => {
@@ -180,7 +185,7 @@ export default function OrderManagement({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{order.quantity} units</div>
-                    <div className="text-sm font-medium text-green-600">{formatCurrency(order.totalAmount)}</div>
+                    <div className="text-sm font-medium text-green-600">{formatRWF(order.totalAmount)}</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2 text-sm text-gray-900 mb-1">
@@ -263,7 +268,7 @@ export default function OrderManagement({
               <option value="">Select glassware</option>
               {glassware.filter(item => item.quantityAvailable > 0).map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.type} - {formatCurrency(item.pricePerUnit)} ({item.quantityAvailable} available)
+                  {item.type} - {formatRWF(item.pricePerUnit)} ({item.quantityAvailable} available)
                 </option>
               ))}
             </select>
