@@ -1,7 +1,7 @@
 import React from 'react';
 import { Download, FileText, Users, Wine, ShoppingCart, TrendingUp } from 'lucide-react';
 import { Customer, Glassware, Order } from '../types';
-import { downloadCSV, formatCurrency, formatDate } from '../utils/csvExport';
+import { downloadCSV, formatRWF, formatDate } from '../utils/csvExport';
 
 interface ReportsProps {
   customers: Customer[];
@@ -76,7 +76,7 @@ export default function Reports({ customers, glassware, orders }: ReportsProps) 
       color: 'bg-purple-500',
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-600',
-      subtext: `Total Value: ${formatCurrency(totalInventoryValue)}`,
+      subtext: `Total Value: ${formatRWF(totalInventoryValue)}`,
     },
     {
       title: 'Orders Report',
@@ -87,7 +87,7 @@ export default function Reports({ customers, glassware, orders }: ReportsProps) 
       color: 'bg-green-500',
       bgColor: 'bg-green-50',
       textColor: 'text-green-600',
-      subtext: `Total Revenue: ${formatCurrency(totalRevenue)}`,
+      subtext: `Total Revenue: ${formatRWF(totalRevenue)}`,
     },
   ];
 
@@ -156,7 +156,7 @@ export default function Reports({ customers, glassware, orders }: ReportsProps) 
             </div>
             <div className="flex justify-between items-center border-t pt-4">
               <span className="text-gray-600">Total Revenue</span>
-              <span className="font-bold text-green-600">{formatCurrency(totalRevenue)}</span>
+              <span className="font-bold text-green-600">{formatRWF(totalRevenue)}</span>
             </div>
           </div>
         </div>

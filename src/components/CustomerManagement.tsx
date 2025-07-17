@@ -37,12 +37,17 @@ export default function CustomerManagement({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingCustomer) {
-      onUpdateCustomer(editingCustomer.id, formData);
-    } else {
-      onAddCustomer(formData);
+    try {
+      if (editingCustomer) {
+        onUpdateCustomer(editingCustomer.id, formData);
+      } else {
+        onAddCustomer(formData);
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('An error occurred. Please try again.');
     }
-    handleCloseModal();
   };
 
   const handleEdit = (customer: Customer) => {
