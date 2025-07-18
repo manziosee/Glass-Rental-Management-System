@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Wine, User, Lock, LogIn, UserPlus, Mail, Eye, EyeOff } from 'lucide-react';
+import { authService } from '../services/authService';
+import { supabase } from '../lib/supabase';
 
 interface AuthFormProps {
   onLogin: () => void;
@@ -17,6 +19,13 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -24,14 +33,11 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
 
     try {
       if (isLogin) {
-        // Login logic
-        if (formData.email === 'admin@glassrental.com' && formData.password === 'admin123') {
-          onLogin();
-        } else {
-          setError('Invalid credentials. Use admin@glassrental.com / admin123');
-        }
+        // Login with Supabase
+        await authService.signIn(formData.email, formData.password);
+        onLogin();
       } else {
-        // Registration logic
+        // Registration with Supabase
         if (formData.password !== formData.confirmPassword) {
           setError('Passwords do not match');
           return;
@@ -41,24 +47,106 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
           return;
         }
         
-        // Simulate registration success
-        setError('');
-        alert('Registration successful! You can now login with your credentials.');
-        setIsLogin(true);
-        setFormData({ email: '', password: '', confirmPassword: '', fullName: '' });
+        const { data, error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              full_name: formData.fullName,
+            }
+          }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.user) {
+          setError('');
+          alert('Registration successful! Please check your email to verify your account, then you can login.');
+          setIsLogin(true);
+          setFormData({ email: '', password: '', confirmPassword: '', fullName: '' });
+        }
       }
-    } catch (err) {
-      setError('An error occurred. Please try again.');
+    } catch (err: unknown) {
+      console.error('Auth error:', err);
+      if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
+        const message = (err as { message: string }).message;
+        if (message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please try again.');
+        } else if (message.includes('User already registered')) {
+          setError('An account with this email already exists. Please login instead.');
+        } else if (message.includes('Email not confirmed')) {
+          setError('Please check your email and click the verification link before logging in.');
+        } else {
+          setError(message || 'An error occurred. Please try again.');
+        }
+      } else {
+        setError('An error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      // Try to login with demo credentials
+      await authService.signIn('admin@glassrental.com', 'admin123');
+      onLogin();
+    } catch {
+      // If demo user doesn't exist, create it
+      try {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: 'admin@glassrental.com',
+          password: 'admin123',
+          options: {
+            data: {
+              full_name: 'Admin User',
+            }
+          }
+        });
+        
+        if (signUpError && !signUpError.message.includes('User already registered')) {
+          throw signUpError;
+        }
+        
+        // Try to login again
+        await authService.signIn('admin@glassrental.com', 'admin123');
+        onLogin();
+      } catch {
+        setError('Demo login failed. Please try manual registration.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickDemo = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await handleDemoLogin();
+  };
+
+  // Auto-fill demo credentials for login
+  const fillDemoCredentials = () => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      email: 'admin@glassrental.com',
+      password: 'admin123'
     });
+  };
+
+  const handleSubmitWrapper = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // If using demo credentials, use demo login
+    if (isLogin && formData.email === 'admin@glassrental.com' && formData.password === 'admin123') {
+      await handleDemoLogin();
+    } else {
+      await handleSubmit(e);
+    }
   };
 
   return (
@@ -81,7 +169,10 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
         <div className="bg-gray-100 p-1 rounded-lg mb-6 flex">
           <button
             type="button"
-            onClick={() => setIsLogin(true)}
+            onClick={() => {
+              setIsLogin(true);
+              setError('');
+            }}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
               isLogin
                 ? 'bg-white text-blue-600 shadow-sm'
@@ -92,7 +183,10 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
           </button>
           <button
             type="button"
-            onClick={() => setIsLogin(false)}
+            onClick={() => {
+              setIsLogin(false);
+              setError('');
+            }}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
               !isLogin
                 ? 'bg-white text-blue-600 shadow-sm'
@@ -105,7 +199,7 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
 
         {/* Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmitWrapper} className="space-y-6">
             {!isLogin && (
               <div>
                 <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
@@ -218,13 +312,30 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
 
           {isLogin && (
             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <p className="text-xs text-blue-600 text-center font-medium">
+              <p className="text-xs text-blue-600 text-center font-medium mb-2">
                 Demo Credentials
               </p>
-              <p className="text-xs text-blue-500 text-center mt-1">
+              <p className="text-xs text-blue-500 text-center mb-3">
                 Email: admin@glassrental.com<br />
                 Password: admin123
               </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={fillDemoCredentials}
+                  className="flex-1 text-xs bg-blue-100 text-blue-700 py-2 px-3 rounded-md hover:bg-blue-200 transition-colors"
+                >
+                  Fill Demo Data
+                </button>
+                <button
+                  type="button"
+                  onClick={handleQuickDemo}
+                  disabled={loading}
+                  className="flex-1 text-xs bg-blue-600 text-white py-2 px-3 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Loading...' : 'Quick Demo'}
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -232,7 +343,7 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2024 Glass Rental Pro. All rights reserved.
+            © {new Date().getFullYear()} Glass Rental Pro. All rights reserved.
           </p>
         </div>
       </div>

@@ -86,7 +86,14 @@ export const orderService = {
   // Update an order
   async update(id: string, updates: Partial<Order>): Promise<Order> {
     try {
-      const updateData: any = {};
+      const updateData: {
+        customer_id?: string;
+        glassware_id?: string;
+        quantity?: number;
+        order_date?: string;
+        delivery_date?: string;
+        status?: string;
+      } = {};
       
       if (updates.customerId) updateData.customer_id = updates.customerId;
       if (updates.glasswareId) updateData.glassware_id = updates.glasswareId;
