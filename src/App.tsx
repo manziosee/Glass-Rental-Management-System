@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import LandingPage from './components/LandingPage';
 import AuthForm from './components/AuthForm';
 import Dashboard from './components/Dashboard';
 import Sidebar from './components/Sidebar';
@@ -8,274 +9,231 @@ import OrderManagement from './components/OrderManagement';
 import InventoryOverview from './components/InventoryOverview';
 import Reports from './components/Reports';
 import { Customer, Glassware, Order, DashboardStats } from './types';
-import { useLocalStorage } from './hooks/useLocalStorage';
+import { authService } from './services/authService';
+import { customerService } from './services/customerService';
+import { glasswareService } from './services/glasswareService';
+import { orderService } from './services/orderService';
 
 function App() {
+  const [showLanding, setShowLanding] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
   
-  const [customers, setCustomers] = useLocalStorage<Customer[]>('glass-rental-customers', []);
-  const [glassware, setGlassware] = useLocalStorage<Glassware[]>('glass-rental-glassware', []);
-  const [orders, setOrders] = useLocalStorage<Order[]>('glass-rental-orders', []);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [glassware, setGlassware] = useState<Glassware[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  // Initialize with sample data if empty
+  // Check authentication status on app load
   useEffect(() => {
-    if (customers.length === 0) {
-      const sampleCustomers: Customer[] = [
-        {
-          id: '1',
-          name: 'Sarah Johnson',
-          email: 'sarah.johnson@email.com',
-          phone: '+1 (555) 123-4567',
-          eventDate: '2024-02-14',
-          eventLocation: 'Grand Hotel Ballroom',
-          eventType: 'Wedding',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          name: 'Michael Corporation',
-          email: 'events@michael-corp.com',
-          phone: '+1 (555) 987-6543',
-          eventDate: '2024-02-20',
-          eventLocation: 'Corporate Center',
-          eventType: 'Corporate Event',
-          createdAt: new Date().toISOString(),
-        },
-      ];
-      setCustomers(sampleCustomers);
-    }
+    checkAuthStatus();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = authService.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        setIsLoggedIn(true);
+        setUser({ id: session.user.id, email: session.user.email ?? '' });
+        loadAllData();
+      } else if (event === 'SIGNED_OUT') {
+        setIsLoggedIn(false);
+        setUser(null);
+        setCustomers([]);
+        setGlassware([]);
+        setOrders([]);
+      }
+    });
 
-    if (glassware.length === 0) {
-      const sampleGlassware: Glassware[] = [
-        {
-          id: '1',
-          type: 'Beer Glass',
-          description: 'Premium beer glasses - Individual rental',
-          quantityAvailable: 240,
-          pricePerUnit: 400,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          type: 'Wine Glass',
-          description: 'Elegant wine glasses - Individual rental',
-          quantityAvailable: 144,
-          pricePerUnit: 450,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          type: 'Cocktail Glass',
-          description: 'Stylish cocktail glasses - Individual rental',
-          quantityAvailable: 144,
-          pricePerUnit: 500,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '4',
-          type: 'Beer Glass Small Box',
-          description: 'Beer glasses small box (6 glasses)',
-          quantityAvailable: 40,
-          pricePerUnit: 2400,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '5',
-          type: 'Beer Glass Large Box',
-          description: 'Beer glasses large box (48 glasses = 8 small boxes)',
-          quantityAvailable: 5,
-          pricePerUnit: 19200,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '6',
-          type: 'Wine Glass Small Box',
-          description: 'Wine glasses small box (6 glasses)',
-          quantityAvailable: 24,
-          pricePerUnit: 2700,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '7',
-          type: 'Wine Glass Large Box',
-          description: 'Wine glasses large box (48 glasses = 8 small boxes)',
-          quantityAvailable: 3,
-          pricePerUnit: 21600,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '8',
-          type: 'Cocktail Glass Small Box',
-          description: 'Cocktail glasses small box (6 glasses)',
-          quantityAvailable: 24,
-          pricePerUnit: 4000,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '9',
-          type: 'Cocktail Glass Large Box',
-          description: 'Cocktail glasses large box (48 glasses = 8 small boxes)',
-          quantityAvailable: 3,
-          pricePerUnit: 32000,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '10',
-          type: 'Champagne Glass',
-          description: 'Premium champagne flutes - Individual rental',
-          quantityAvailable: 96,
-          pricePerUnit: 450,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '11',
-          type: 'Champagne Glass Small Box',
-          description: 'Champagne glasses small box (6 glasses)',
-          quantityAvailable: 16,
-          pricePerUnit: 2700,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '12',
-          type: 'Champagne Glass Large Box',
-          description: 'Champagne glasses large box (48 glasses = 8 small boxes)',
-          quantityAvailable: 2,
-          pricePerUnit: 21600,
-          createdAt: new Date().toISOString(),
-        },
-      ];
-      setGlassware(sampleGlassware);
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const session = await authService.getSession();
+      if (session) {
+        setIsLoggedIn(true);
+        setUser({ id: session.user.id, email: session.user.email ?? '' });
+        await loadAllData();
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [customers.length, glassware.length, setCustomers, setGlassware]);
+  };
+
+  const loadAllData = async () => {
+    try {
+      const [customersData, glasswareData, ordersData] = await Promise.all([
+        customerService.getAll(),
+        glasswareService.getAll(),
+        orderService.getAll()
+      ]);
+      
+      setCustomers(customersData);
+      setGlassware(glasswareData);
+      setOrders(ordersData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      alert('Error loading data. Please refresh the page.');
+    }
+  };
+
+  const handleGetStarted = () => {
+    setShowLanding(false);
+  };
 
   const handleLogin = () => {
+    setShowLanding(false);
     setIsLoggedIn(true);
+    loadAllData();
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setActiveSection('dashboard');
-  };
-
-  const addCustomer = (customerData: Omit<Customer, 'id' | 'createdAt'>) => {
-    const newCustomer: Customer = {
-      ...customerData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-    };
-    setCustomers([...customers, newCustomer]);
-  };
-
-  const updateCustomer = (id: string, updates: Partial<Customer>) => {
-    setCustomers(customers.map(customer => 
-      customer.id === id ? { ...customer, ...updates } : customer
-    ));
-  };
-
-  const deleteCustomer = (id: string) => {
-    if (confirm('Are you sure you want to delete this customer?')) {
-      setCustomers(customers.filter(customer => customer.id !== id));
-      // Also delete related orders
-      setOrders(orders.filter(order => order.customerId !== id));
+  const handleLogout = async () => {
+    try {
+      await authService.signOut();
+      setIsLoggedIn(false);
+      setUser(null);
+      setActiveSection('dashboard');
+      setCustomers([]);
+      setGlassware([]);
+      setOrders([]);
+    } catch (error) {
+      console.error('Error signing out:', error);
     }
   };
 
-  const addGlassware = (glasswareData: Omit<Glassware, 'id' | 'createdAt'>) => {
-    const newGlassware: Glassware = {
-      ...glasswareData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-    };
-    setGlassware([...glassware, newGlassware]);
-  };
-
-  const updateGlassware = (id: string, updates: Partial<Glassware>) => {
-    setGlassware(glassware.map(item => 
-      item.id === id ? { ...item, ...updates } : item
-    ));
-  };
-
-  const deleteGlassware = (id: string) => {
-    if (confirm('Are you sure you want to delete this glassware item?')) {
-      setGlassware(glassware.filter(item => item.id !== id));
-      // Also delete related orders
-      setOrders(orders.filter(order => order.glasswareId !== id));
-    }
-  };
-
-  const addOrder = (orderData: Omit<Order, 'id' | 'createdAt' | 'customerName' | 'glasswareType' | 'totalAmount'>) => {
-    const customer = customers.find(c => c.id === orderData.customerId);
-    const glasswareItem = glassware.find(g => g.id === orderData.glasswareId);
-    
-    if (!customer || !glasswareItem) {
-      alert('Customer or glassware not found');
-      return;
-    }
-
-    if (glasswareItem.quantityAvailable < orderData.quantity) {
-      alert('Not enough stock available');
-      return;
-    }
-
-    const newOrder: Order = {
-      ...orderData,
-      id: Date.now().toString(),
-      customerName: customer.name,
-      glasswareType: glasswareItem.type,
-      totalAmount: glasswareItem.pricePerUnit * orderData.quantity,
-      createdAt: new Date().toISOString(),
-    };
-
-    setOrders([...orders, newOrder]);
-    
-    // Update glassware quantity
-    updateGlassware(orderData.glasswareId, {
-      quantityAvailable: glasswareItem.quantityAvailable - orderData.quantity
-    });
-  };
-
-  const updateOrder = (id: string, updates: Partial<Order>) => {
-    const order = orders.find(o => o.id === id);
-    if (!order) return;
-
-    // If quantity is being updated, adjust stock accordingly
-    if (updates.quantity && updates.quantity !== order.quantity) {
-      const glasswareItem = glassware.find(g => g.id === order.glasswareId);
-      if (glasswareItem) {
-        const quantityDiff = order.quantity - updates.quantity;
-        updateGlassware(order.glasswareId, {
-          quantityAvailable: glasswareItem.quantityAvailable + quantityDiff
-        });
+  // Customer CRUD operations
+  const addCustomer = async (customerData: Omit<Customer, 'id' | 'createdAt'>) => {
+    try {
+      const newCustomer = await customerService.create(customerData);
+      setCustomers([newCustomer, ...customers]);
+    } catch (error: unknown) {
+      console.error('Error adding customer:', error);
+      if (error instanceof Error) {
+        alert(error.message || 'Error adding customer');
+      } else {
+        alert('Error adding customer');
       }
     }
-
-    // Recalculate total amount if quantity changed
-    if (updates.quantity) {
-      const glasswareItem = glassware.find(g => g.id === order.glasswareId);
-      if (glasswareItem) {
-        updates.totalAmount = glasswareItem.pricePerUnit * updates.quantity;
-      }
-    }
-
-    setOrders(orders.map(order => 
-      order.id === id ? { ...order, ...updates } : order
-    ));
   };
 
-  const deleteOrder = (id: string) => {
-    if (confirm('Are you sure you want to delete this order?')) {
-      const order = orders.find(o => o.id === id);
-      if (order) {
-        // Return stock to inventory
-        const glasswareItem = glassware.find(g => g.id === order.glasswareId);
-        if (glasswareItem) {
-          updateGlassware(order.glasswareId, {
-            quantityAvailable: glasswareItem.quantityAvailable + order.quantity
-          });
+  const updateCustomer = async (id: string, updates: Partial<Customer>) => {
+    try {
+      const updatedCustomer = await customerService.update(id, updates);
+      setCustomers(customers.map(customer => 
+        customer.id === id ? updatedCustomer : customer
+      ));
+    } catch (error: unknown) {
+      console.error('Error updating customer:', error);
+      if (error instanceof Error) {
+        alert(error.message || 'Error updating customer');
+      } else {
+        alert('Error updating customer');
+      }
+    }
+  };
+
+  const deleteCustomer = async (id: string) => {
+    if (confirm('Are you sure you want to delete this customer? This will also delete all related orders.')) {
+      try {
+        await customerService.delete(id);
+        setCustomers(customers.filter(customer => customer.id !== id));
+        setOrders(orders.filter(order => order.customerId !== id));
+      } catch (error: unknown) {
+        console.error('Error deleting customer:', error);
+        if (error instanceof Error) {
+          alert(error.message || 'Error deleting customer');
+        } else {
+          alert('Error deleting customer');
         }
       }
-      setOrders(orders.filter(order => order.id !== id));
+    }
+  };
+
+  // Glassware CRUD operations
+  const addGlassware = async (glasswareData: Omit<Glassware, 'id' | 'createdAt'>) => {
+    try {
+      const newGlassware = await glasswareService.create(glasswareData);
+      setGlassware([newGlassware, ...glassware]);
+    } catch (error: any) {
+      console.error('Error adding glassware:', error);
+      alert(error.message || 'Error adding glassware');
+    }
+  };
+
+  const updateGlassware = async (id: string, updates: Partial<Glassware>) => {
+    try {
+      const updatedGlassware = await glasswareService.update(id, updates);
+      setGlassware(glassware.map(item => 
+        item.id === id ? updatedGlassware : item
+      ));
+    } catch (error: any) {
+      console.error('Error updating glassware:', error);
+      alert(error.message || 'Error updating glassware');
+    }
+  };
+
+  const deleteGlassware = async (id: string) => {
+    if (confirm('Are you sure you want to delete this glassware item? This will also delete all related orders.')) {
+      try {
+        await glasswareService.delete(id);
+        setGlassware(glassware.filter(item => item.id !== id));
+        setOrders(orders.filter(order => order.glasswareId !== id));
+      } catch (error: any) {
+        console.error('Error deleting glassware:', error);
+        alert(error.message || 'Error deleting glassware');
+      }
+    }
+  };
+
+  // Order CRUD operations
+  const addOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'customerName' | 'glasswareType' | 'totalAmount'>) => {
+    try {
+      const newOrder = await orderService.create(orderData);
+      setOrders([newOrder, ...orders]);
+      
+      // Update local glassware quantity
+      const glasswareItem = glassware.find(g => g.id === orderData.glasswareId);
+      if (glasswareItem) {
+        const updatedGlassware = await glasswareService.getAll();
+        setGlassware(updatedGlassware);
+      }
+    } catch (error: any) {
+      console.error('Error adding order:', error);
+      alert(error.message || 'Error creating order');
+    }
+  };
+
+  const updateOrder = async (id: string, updates: Partial<Order>) => {
+    try {
+      const updatedOrder = await orderService.update(id, updates);
+      setOrders(orders.map(order => 
+        order.id === id ? updatedOrder : order
+      ));
+      
+      // Refresh glassware data to reflect inventory changes
+      const updatedGlassware = await glasswareService.getAll();
+      setGlassware(updatedGlassware);
+    } catch (error: any) {
+      console.error('Error updating order:', error);
+      alert(error.message || 'Error updating order');
+    }
+  };
+
+  const deleteOrder = async (id: string) => {
+    if (confirm('Are you sure you want to delete this order?')) {
+      try {
+        await orderService.delete(id);
+        setOrders(orders.filter(order => order.id !== id));
+        
+        // Refresh glassware data to reflect inventory changes
+        const updatedGlassware = await glasswareService.getAll();
+        setGlassware(updatedGlassware);
+      } catch (error: any) {
+        console.error('Error deleting order:', error);
+        alert(error.message || 'Error deleting order');
+      }
     }
   };
 
@@ -289,6 +247,21 @@ function App() {
     };
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (showLanding) {
+    return <LandingPage onGetStarted={handleGetStarted} />;
+  }
+
   if (!isLoggedIn) {
     return <AuthForm onLogin={handleLogin} />;
   }
@@ -296,7 +269,16 @@ function App() {
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'dashboard':
-        return <Dashboard stats={getDashboardStats()} />;
+        return (
+          <Dashboard 
+            stats={getDashboardStats()} 
+            customers={customers}
+            glassware={glassware}
+            onAddCustomer={addCustomer}
+            onAddGlassware={addGlassware}
+            onAddOrder={addOrder}
+          />
+        );
       case 'inventory':
         return <InventoryOverview glassware={glassware} />;
       case 'customers':
@@ -341,6 +323,7 @@ function App() {
         activeSection={activeSection}
         onSectionChange={setActiveSection}
         onLogout={handleLogout}
+        userEmail={user?.email}
       />
       <div className="flex-1 overflow-auto bg-gray-50">
         {renderActiveSection()}

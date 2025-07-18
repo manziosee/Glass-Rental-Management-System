@@ -10,7 +10,27 @@ export const authService = {
 
     if (error) {
       console.error('Error signing in:', error);
-      throw new Error(error.message);
+      throw error;
+    }
+
+    return data;
+  },
+
+  // Sign up with email and password
+  async signUp(email: string, password: string, fullName?: string) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        }
+      }
+    });
+
+    if (error) {
+      console.error('Error signing up:', error);
+      throw error;
     }
 
     return data;
@@ -22,7 +42,7 @@ export const authService = {
     
     if (error) {
       console.error('Error signing out:', error);
-      throw new Error(error.message);
+      throw error;
     }
   },
 
@@ -32,14 +52,14 @@ export const authService = {
     
     if (error) {
       console.error('Error getting session:', error);
-      throw new Error(error.message);
+      throw error;
     }
 
     return session;
   },
 
   // Listen to auth changes
-  onAuthStateChange(callback: (event: string, session: any) => void) {
+  onAuthStateChange(callback: (event: string, session: import('@supabase/supabase-js').Session | null) => void) {
     return supabase.auth.onAuthStateChange(callback);
   },
 };

@@ -1,10 +1,11 @@
 import React from 'react';
-import { Users, Wine, ShoppingCart, FileText, BarChart3, LogOut, Settings, Package } from 'lucide-react';
+import { Users, Wine, ShoppingCart, FileText, BarChart3, LogOut, Package } from 'lucide-react';
 
 interface SidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
   onLogout: () => void;
+  userEmail?: string;
 }
 
 const menuItems = [
@@ -16,9 +17,9 @@ const menuItems = [
   { id: 'reports', label: 'Reports', icon: FileText },
 ];
 
-export default function Sidebar({ activeSection, onSectionChange, onLogout }: SidebarProps) {
+export default function Sidebar({ activeSection, onSectionChange, onLogout, userEmail }: SidebarProps) {
   return (
-    <div className="bg-gradient-to-b from-gray-900 to-gray-800 w-64 min-h-screen shadow-xl">
+    <div className="bg-gradient-to-b from-gray-900 to-gray-800 w-64 min-h-screen shadow-xl flex flex-col">
       <div className="p-6">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -31,7 +32,7 @@ export default function Sidebar({ activeSection, onSectionChange, onLogout }: Si
         </div>
       </div>
 
-      <nav className="mt-8">
+      <nav className="mt-8 flex-1">
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -51,7 +52,7 @@ export default function Sidebar({ activeSection, onSectionChange, onLogout }: Si
         })}
       </nav>
 
-      <div className="absolute bottom-0 w-64 p-6">
+      <div className="p-6 mt-auto">
         <div className="border-t border-gray-700 pt-4 mb-4">
           <div className="flex items-center gap-3 px-2 py-2">
             <div className="h-8 w-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
@@ -59,7 +60,7 @@ export default function Sidebar({ activeSection, onSectionChange, onLogout }: Si
             </div>
             <div>
               <p className="text-sm font-medium text-white">Admin User</p>
-              <p className="text-xs text-gray-400">admin@glassrental.com</p>
+              <p className="text-xs text-gray-400">{userEmail || 'admin@glassrental.com'}</p>
             </div>
           </div>
         </div>

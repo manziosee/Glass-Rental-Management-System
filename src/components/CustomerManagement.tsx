@@ -158,12 +158,16 @@ export default function CustomerManagement({
                       <button
                         onClick={() => handleEdit(customer)}
                         className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded"
+                        title="Edit Customer"
+                        aria-label="Edit Customer"
                       >
                         <Edit2 className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onDeleteCustomer(customer.id)}
                         className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
+                        title="Delete Customer"
+                        aria-label="Delete Customer"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -196,6 +200,8 @@ export default function CustomerManagement({
               <input
                 type="text"
                 required
+                placeholder="Enter customer name"
+                title="Customer Name"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -208,6 +214,8 @@ export default function CustomerManagement({
               <input
                 type="email"
                 required
+                placeholder="Enter email address"
+                title="Email"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -223,21 +231,26 @@ export default function CustomerManagement({
               <input
                 type="tel"
                 required
+                placeholder="Enter phone number"
+                title="Phone"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Event Date
+              <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 mb-1">
+              Event Date
               </label>
               <input
-                type="date"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value={formData.eventDate}
-                onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+              id="eventDate"
+              type="date"
+              required
+              placeholder="Select event date"
+              title="Event Date"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              value={formData.eventDate}
+              onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
               />
             </div>
           </div>
@@ -249,6 +262,8 @@ export default function CustomerManagement({
             <input
               type="text"
               required
+              placeholder="Enter event location"
+              title="Event Location"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               value={formData.eventLocation}
               onChange={(e) => setFormData({ ...formData, eventLocation: e.target.value })}
@@ -256,10 +271,11 @@ export default function CustomerManagement({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="eventType" className="block text-sm font-medium text-gray-700 mb-1">
               Event Type
             </label>
             <select
+              id="eventType"
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               value={formData.eventType}
