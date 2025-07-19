@@ -87,13 +87,13 @@ export default function InventoryOverview({ glassware }: InventoryOverviewProps)
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {categories.map((category, index) => (
-          <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className={`${category.bgColor} p-3 rounded-lg`}>
                 <Package className={`h-6 w-6 ${category.textColor}`} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">{category.name}</h3>
                 <p className="text-sm text-gray-600">Total Capacity: {category.totalGlasses} glasses</p>
               </div>
             </div>
@@ -104,7 +104,7 @@ export default function InventoryOverview({ glassware }: InventoryOverviewProps)
                 <div className="flex items-center gap-3">
                   <Package className="h-5 w-5 text-gray-600" />
                   <div>
-                    <p className="font-medium text-gray-900">Individual Glass</p>
+                    <p className="text-sm sm:text-base font-medium text-gray-900">Individual Glass</p>
                     <p className="text-sm text-gray-600">
                       Available: {category.individual?.quantityAvailable || 0}
                     </p>
@@ -114,7 +114,7 @@ export default function InventoryOverview({ glassware }: InventoryOverviewProps)
                   <p className="font-bold text-gray-900">
                     {formatRWF(category.individual?.pricePerUnit || 0)}
                   </p>
-                  <p className="text-sm text-gray-600">per glass</p>
+                  <p className="text-xs sm:text-sm text-gray-600">per glass</p>
                 </div>
               </div>
 
@@ -123,7 +123,7 @@ export default function InventoryOverview({ glassware }: InventoryOverviewProps)
                 <div className="flex items-center gap-3">
                   <Box className="h-5 w-5 text-gray-600" />
                   <div>
-                    <p className="font-medium text-gray-900">Small Box (6 glasses)</p>
+                    <p className="text-sm sm:text-base font-medium text-gray-900">Small Box (6 glasses)</p>
                     <p className="text-sm text-gray-600">
                       Available: {category.smallBox?.quantityAvailable || 0} boxes
                     </p>
@@ -133,7 +133,7 @@ export default function InventoryOverview({ glassware }: InventoryOverviewProps)
                   <p className="font-bold text-gray-900">
                     {formatRWF(category.smallBox?.pricePerUnit || 0)}
                   </p>
-                  <p className="text-sm text-gray-600">per box</p>
+                  <p className="text-xs sm:text-sm text-gray-600">per box</p>
                 </div>
               </div>
 
@@ -142,7 +142,7 @@ export default function InventoryOverview({ glassware }: InventoryOverviewProps)
                 <div className="flex items-center gap-3">
                   <Archive className="h-5 w-5 text-gray-600" />
                   <div>
-                    <p className="font-medium text-gray-900">Large Box (48 glasses)</p>
+                    <p className="text-sm sm:text-base font-medium text-gray-900">Large Box (48 glasses)</p>
                     <p className="text-sm text-gray-600">
                       Available: {category.largeBox?.quantityAvailable || 0} boxes
                     </p>
@@ -152,7 +152,7 @@ export default function InventoryOverview({ glassware }: InventoryOverviewProps)
                   <p className="font-bold text-gray-900">
                     {formatRWF(category.largeBox?.pricePerUnit || 0)}
                   </p>
-                  <p className="text-sm text-gray-600">per box</p>
+                  <p className="text-xs sm:text-sm text-gray-600">per box</p>
                 </div>
               </div>
             </div>
@@ -160,7 +160,7 @@ export default function InventoryOverview({ glassware }: InventoryOverviewProps)
             {/* Pricing Summary */}
             <div className="mt-6 pt-4 border-t border-gray-200">
               <h4 className="font-medium text-gray-900 mb-2">Pricing Summary</h4>
-              <div className="text-sm text-gray-600 space-y-1">
+              <div className="text-xs sm:text-sm text-gray-600 space-y-1">
                 <p>• 1 Glass = {formatRWF(category.individual?.pricePerUnit || 0)}</p>
                 <p>• 6 Glasses (Small Box) = {formatRWF(category.smallBox?.pricePerUnit || 0)}</p>
                 <p>• 48 Glasses (Large Box) = {formatRWF(category.largeBox?.pricePerUnit || 0)}</p>
@@ -171,7 +171,7 @@ export default function InventoryOverview({ glassware }: InventoryOverviewProps)
       </div>
 
       {/* Total Inventory Summary */}
-      <div className="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200">
+      <div className="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 sm:p-6 border border-blue-200">
         <h3 className="text-xl font-bold text-gray-900 mb-4">Total Inventory Summary</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {categories.map((category, index) => (
@@ -179,13 +179,13 @@ export default function InventoryOverview({ glassware }: InventoryOverviewProps)
               <div className={`${category.bgColor} p-3 rounded-lg mx-auto w-fit mb-2`}>
                 <Package className={`h-5 w-5 ${category.textColor}`} />
               </div>
-              <p className="font-bold text-gray-900">{category.totalGlasses}</p>
+              <p className="text-lg sm:text-xl font-bold text-gray-900">{category.totalGlasses}</p>
               <p className="text-sm text-gray-600">{category.name}</p>
             </div>
           ))}
         </div>
         <div className="mt-4 pt-4 border-t border-blue-200">
-          <p className="text-center text-lg font-bold text-gray-900">
+          <p className="text-center text-base sm:text-lg font-bold text-gray-900">
             Total Glasses Available: 624 glasses
           </p>
         </div>

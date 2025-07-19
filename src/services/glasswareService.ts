@@ -59,12 +59,7 @@ export const glasswareService = {
   // Update glassware
   async update(id: string, updates: Partial<Glassware>): Promise<Glassware> {
     try {
-      const updateData: Partial<{
-        type: string;
-        description: string;
-        quantity_available: number;
-        price_per_unit: number;
-      }> = {};
+      const updateData: any = {};
       
       if (updates.type) updateData.type = updates.type;
       if (updates.description) updateData.description = updates.description;

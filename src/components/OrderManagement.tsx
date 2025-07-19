@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, Search, Calendar, User, Package } from 'lucide-react';
 import { Order, Customer, Glassware } from '../types';
+import { stockService } from '../services/stockService';
 import Modal from './Modal';
 import { formatRWF, formatDate } from '../utils/csvExport';
 
@@ -25,6 +26,7 @@ export default function OrderManagement({
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [availableStock, setAvailableStock] = useState<Record<string, number>>({});
   const [formData, setFormData] = useState({
     customerId: '',
     glasswareId: '',
@@ -40,6 +42,26 @@ export default function OrderManagement({
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  // Load available stock when modal opens
+  React.useEffect(() => {
+    if (isModalOpen) {
+      loadAvailableStock();
+    }
+  }, [isModalOpen]);
+
+  const loadAvailableStock = async () => {
+    try {
+      const stockData = await stockService.getStockForOrders();
+      const stockMap = stockData.reduce((acc, item) => {
+        acc[item.glassType] = item.availableGlasses;
+        return acc;
+      }, {} as Record<string, number>);
+      setAvailableStock(stockMap);
+    } catch (error) {
+      console.error('Error loading stock data:', error);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,15 +144,10 @@ export default function OrderManagement({
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <label htmlFor="statusFilter" className="sr-only">
-              Filter by status
-            </label>
             <select
-              id="statusFilter"
               className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              title="Filter by status"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -146,22 +163,22 @@ export default function OrderManagement({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Order Details
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                   Customer
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Quantity & Amount
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                   Dates
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -169,7 +186,7 @@ export default function OrderManagement({
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -178,21 +195,22 @@ export default function OrderManagement({
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{order.glasswareType}</div>
-                        <div className="text-sm text-gray-500">Order #{order.id.slice(-8)}</div>
+                        <div className="text-xs sm:text-sm text-gray-500">Order #{order.id.slice(-8)}</div>
+                        <div className="text-xs text-gray-500 sm:hidden">{order.customerName}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-gray-400" />
                       <div className="text-sm text-gray-900">{order.customerName}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{order.quantity} units</div>
                     <div className="text-sm font-medium text-green-600">{formatRWF(order.totalAmount)}</div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 sm:px-6 py-4 hidden md:table-cell">
                     <div className="flex items-center gap-2 text-sm text-gray-900 mb-1">
                       <Calendar className="h-4 w-4 text-gray-400" />
                       Ordered: {formatDate(order.orderDate)}
@@ -201,26 +219,22 @@ export default function OrderManagement({
                       Delivery: {formatDate(order.deliveryDate)}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(order.status)}`}>
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center gap-2 justify-end">
                       <button
                         onClick={() => handleEdit(order)}
                         className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded"
-                        title="Edit Order"
-                        aria-label="Edit Order"
                       >
                         <Edit2 className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onDeleteOrder(order.id)}
                         className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
-                        title="Delete Order"
-                        aria-label="Delete Order"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -251,7 +265,6 @@ export default function OrderManagement({
             </label>
             <select
               required
-              title="Customer"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               value={formData.customerId}
               onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
@@ -271,15 +284,14 @@ export default function OrderManagement({
             </label>
             <select
               required
-              title="Glassware"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               value={formData.glasswareId}
               onChange={(e) => setFormData({ ...formData, glasswareId: e.target.value })}
             >
               <option value="">Select glassware</option>
-              {glassware.filter(item => item.quantityAvailable > 0).map((item) => (
+              {glassware.filter(item => availableStock[item.type] > 0).map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.type} - {formatRWF(item.pricePerUnit)} ({item.quantityAvailable} available)
+                  {item.type} - {formatRWF(item.pricePerUnit)} ({availableStock[item.type] || 0} glasses available)
                 </option>
               ))}
             </select>
@@ -294,8 +306,6 @@ export default function OrderManagement({
                 type="number"
                 required
                 min="1"
-                title="Quantity"
-                placeholder="Enter quantity"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
@@ -307,7 +317,6 @@ export default function OrderManagement({
               </label>
               <select
                 required
-                title="Order Status"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as Order['status'] })}
@@ -329,8 +338,6 @@ export default function OrderManagement({
               <input
                 type="date"
                 required
-                title="Order Date"
-                placeholder="Select order date"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.orderDate}
                 onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
@@ -343,8 +350,6 @@ export default function OrderManagement({
               <input
                 type="date"
                 required
-                title="Delivery Date"
-                placeholder="Select delivery date"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.deliveryDate}
                 onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}

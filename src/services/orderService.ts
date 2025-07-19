@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { Order } from '../types';
+import { stockService } from './stockService';
 
 export const orderService = {
   // Get all orders with customer and glassware details
@@ -32,6 +33,22 @@ export const orderService = {
   // Create a new order
   async create(orderData: Omit<Order, 'id' | 'createdAt' | 'customerName' | 'glasswareType' | 'totalAmount'>): Promise<Order> {
     try {
+      // Check stock availability before creating order
+      const { data: glasswareData, error: glasswareError } = await supabase
+        .from('glassware')
+        .select('type')
+        .eq('id', orderData.glasswareId)
+        .single();
+
+      if (glasswareError) {
+        throw new Error('Glassware not found');
+      }
+
+      const availableGlasses = await stockService.getAvailableGlasses(glasswareData.type);
+      if (availableGlasses < orderData.quantity) {
+        throw new Error(`Insufficient inventory. Only ${availableGlasses} glasses available for ${glasswareData.type}`);
+      }
+
       const { data, error } = await supabase
         .from('orders')
         .insert({
@@ -86,14 +103,7 @@ export const orderService = {
   // Update an order
   async update(id: string, updates: Partial<Order>): Promise<Order> {
     try {
-      const updateData: {
-        customer_id?: string;
-        glassware_id?: string;
-        quantity?: number;
-        order_date?: string;
-        delivery_date?: string;
-        status?: string;
-      } = {};
+      const updateData: any = {};
       
       if (updates.customerId) updateData.customer_id = updates.customerId;
       if (updates.glasswareId) updateData.glassware_id = updates.glasswareId;

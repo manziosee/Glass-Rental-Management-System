@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Users, Wine, ShoppingCart, DollarSign, Clock, Plus } from 'lucide-react';
+import { Users, Wine, ShoppingCart, DollarSign, TrendingUp, Clock, Plus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DashboardStats, Customer, Glassware, Order } from '../types';
+import { stockService } from '../services/stockService';
 import { formatRWF } from '../utils/csvExport';
 import Modal from './Modal';
 
@@ -9,6 +10,7 @@ interface DashboardProps {
   stats: DashboardStats;
   customers: Customer[];
   glassware: Glassware[];
+  orders: Order[];
   onAddCustomer: (customer: Omit<Customer, 'id' | 'createdAt'>) => void;
   onAddGlassware: (glassware: Omit<Glassware, 'id' | 'createdAt'>) => void;
   onAddOrder: (order: Omit<Order, 'id' | 'createdAt' | 'customerName' | 'glasswareType' | 'totalAmount'>) => void;
@@ -18,6 +20,7 @@ export default function Dashboard({
   stats, 
   customers, 
   glassware, 
+  orders, 
   onAddCustomer, 
   onAddGlassware, 
   onAddOrder 
@@ -45,6 +48,7 @@ export default function Dashboard({
     deliveryDate: '',
     status: 'pending' as Order['status'],
   });
+  const [availableStock, setAvailableStock] = useState<Record<string, number>>({});
 
   const statCards = [
     {
@@ -99,6 +103,26 @@ export default function Dashboard({
       changeColor: 'text-green-600',
     },
   ];
+
+  // Load available stock when order modal opens
+  React.useEffect(() => {
+    if (activeModal === 'order') {
+      loadAvailableStock();
+    }
+  }, [activeModal]);
+
+  const loadAvailableStock = async () => {
+    try {
+      const stockData = await stockService.getStockForOrders();
+      const stockMap = stockData.reduce((acc, item) => {
+        acc[item.glassType] = item.availableGlasses;
+        return acc;
+      }, {} as Record<string, number>);
+      setAvailableStock(stockMap);
+    } catch (error) {
+      console.error('Error loading stock data:', error);
+    }
+  };
 
   // Prepare chart data
   const glasswareData = [
@@ -199,7 +223,7 @@ export default function Dashboard({
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="flex items-center justify-between mb-6">
                 <div className={`${stat.bgColor} p-3 rounded-lg`}>
                   <Icon className={`h-6 w-6 ${stat.textColor}`} />
@@ -211,10 +235,10 @@ export default function Dashboard({
                 </div>
               </div>
               <div>
-                <p className="text-3xl font-bold text-gray-900 mb-2">
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                   {stat.isRevenue ? stat.value : stat.value.toLocaleString()}
                 </p>
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">{stat.title}</p>
               </div>
             </div>
           );
@@ -223,9 +247,9 @@ export default function Dashboard({
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-6">Revenue Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={250}>
             <BarChart data={revenueData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
@@ -236,9 +260,9 @@ export default function Dashboard({
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-6">Inventory Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
                 data={glasswareData}
@@ -259,7 +283,7 @@ export default function Dashboard({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h3>
           <div className="space-y-3">
             <button 
@@ -301,7 +325,7 @@ export default function Dashboard({
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-6">System Status</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -562,9 +586,9 @@ export default function Dashboard({
               onChange={(e) => setOrderFormData({ ...orderFormData, glasswareId: e.target.value })}
             >
               <option value="">Select glassware</option>
-              {glassware.filter(item => item.quantityAvailable > 0).map((item) => (
+              {glassware.filter(item => availableStock[item.type] > 0).map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.type} - {formatRWF(item.pricePerUnit)} ({item.quantityAvailable} available)
+                  {item.type} - {formatRWF(item.pricePerUnit)} ({availableStock[item.type] || 0} glasses available)
                 </option>
               ))}
             </select>
@@ -582,8 +606,6 @@ export default function Dashboard({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={orderFormData.quantity}
                 onChange={(e) => setOrderFormData({ ...orderFormData, quantity: parseInt(e.target.value) })}
-                placeholder="Enter quantity"
-                title="Quantity"
               />
             </div>
             <div>
