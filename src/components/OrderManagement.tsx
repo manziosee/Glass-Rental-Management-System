@@ -229,12 +229,15 @@ export default function OrderManagement({
                       <button
                         onClick={() => handleEdit(order)}
                         className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded"
+                        title="Edit Order"
                       >
                         <Edit2 className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onDeleteOrder(order.id)}
                         className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
+                        title="Delete Order"
+                        aria-label="Delete Order"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -265,6 +268,7 @@ export default function OrderManagement({
             </label>
             <select
               required
+              title="Customer"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               value={formData.customerId}
               onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
@@ -284,6 +288,7 @@ export default function OrderManagement({
             </label>
             <select
               required
+              title="Glassware"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               value={formData.glasswareId}
               onChange={(e) => setFormData({ ...formData, glasswareId: e.target.value })}
@@ -306,6 +311,8 @@ export default function OrderManagement({
                 type="number"
                 required
                 min="1"
+                title="Quantity"
+                placeholder="Enter quantity"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
@@ -317,6 +324,7 @@ export default function OrderManagement({
               </label>
               <select
                 required
+                title="Order Status"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as Order['status'] })}
@@ -338,6 +346,8 @@ export default function OrderManagement({
               <input
                 type="date"
                 required
+                title="Order Date"
+                placeholder="Select order date"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.orderDate}
                 onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
@@ -350,6 +360,8 @@ export default function OrderManagement({
               <input
                 type="date"
                 required
+                title="Delivery Date"
+                placeholder="Select delivery date"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.deliveryDate}
                 onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}

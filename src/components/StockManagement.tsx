@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, AlertTriangle, Plus, Minus, RefreshCw, History } from 'lucide-react';
+import { Package, AlertTriangle, Plus, RefreshCw, History } from 'lucide-react';
 import { stockService, StockItem, StockAdjustment } from '../services/stockService';
 import { formatRWF, formatDate } from '../utils/csvExport';
 import Modal from './Modal';
@@ -16,6 +16,7 @@ export default function StockManagement() {
     quantity: 0,
     reason: '',
   });
+  const [error, setError] = useState('');
 
   useEffect(() => {
     loadStockData();
@@ -32,7 +33,7 @@ export default function StockManagement() {
       setStockAdjustments(adjustmentsData);
     } catch (error) {
       console.error('Error loading stock data:', error);
-      alert('Error loading stock data. Please refresh the page.');
+      setError('Error loading stock data. Please refresh the page.');
     } finally {
       setLoading(false);
     }
@@ -40,9 +41,27 @@ export default function StockManagement() {
 
   const handleAdjustStock = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedStockItem) return;
+    setError('');
+    
+    if (!selectedStockItem) {
+      setError('No stock item selected');
+      return;
+    }
 
     try {
+      // Validate quantity
+      if (adjustmentForm.quantity <= 0) {
+        setError('Quantity must be greater than 0');
+        return;
+      }
+
+      // For damage, ensure we don't deduct more than available
+      if (adjustmentForm.adjustmentType === 'damage' && 
+          adjustmentForm.quantity > selectedStockItem.currentStock) {
+        setError(`Cannot damage more items than available (${selectedStockItem.currentStock})`);
+        return;
+      }
+
       const quantityChange = adjustmentForm.adjustmentType === 'damage' 
         ? -Math.abs(adjustmentForm.quantity)
         : Math.abs(adjustmentForm.quantity);
@@ -55,7 +74,10 @@ export default function StockManagement() {
         adjustmentForm.reason
       );
 
+      // Refresh data
       await loadStockData();
+      
+      // Close modal and reset form
       setIsAdjustmentModalOpen(false);
       setSelectedStockItem(null);
       setAdjustmentForm({
@@ -63,14 +85,24 @@ export default function StockManagement() {
         quantity: 0,
         reason: '',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adjusting stock:', error);
-      alert(error.message || 'Error adjusting stock');
+      if (error instanceof Error) {
+        setError(error.message || 'Error adjusting stock');
+      } else {
+        setError('Error adjusting stock');
+      }
     }
   };
 
   const openAdjustmentModal = (stockItem: StockItem) => {
     setSelectedStockItem(stockItem);
+    setAdjustmentForm({
+      adjustmentType: 'restock',
+      quantity: 0,
+      reason: '',
+    });
+    setError('');
     setIsAdjustmentModalOpen(true);
   };
 
@@ -207,15 +239,17 @@ export default function StockManagement() {
         onClose={() => {
           setIsAdjustmentModalOpen(false);
           setSelectedStockItem(null);
+          setError('');
         }}
         title={`Adjust Stock - ${selectedStockItem?.glassType} (${getUnitTypeLabel(selectedStockItem?.unitType || '')})`}
       >
         <form onSubmit={handleAdjustStock} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="adjustment-type-select" className="block text-sm font-medium text-gray-700 mb-1">
               Adjustment Type
             </label>
             <select
+              id="adjustment-type-select"
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               value={adjustmentForm.adjustmentType}
@@ -242,8 +276,10 @@ export default function StockManagement() {
               value={adjustmentForm.quantity}
               onChange={(e) => setAdjustmentForm({ 
                 ...adjustmentForm, 
-                quantity: parseInt(e.target.value) || 0
+                quantity: Math.max(0, parseInt(e.target.value) || 0)
               })}
+              placeholder="Enter quantity"
+              title="Quantity"
             />
           </div>
 
@@ -278,6 +314,12 @@ export default function StockManagement() {
             </p>
           </div>
 
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
@@ -290,6 +332,7 @@ export default function StockManagement() {
               onClick={() => {
                 setIsAdjustmentModalOpen(false);
                 setSelectedStockItem(null);
+                setError('');
               }}
               className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
             >
