@@ -20,7 +20,12 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  type AuthUser = {
+    id: string;
+    email: string;
+    [key: string]: unknown;
+  };
+  const [user, setUser] = useState<AuthUser | null>(null);
   
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [glassware, setGlassware] = useState<Glassware[]>([]);
@@ -34,7 +39,10 @@ function App() {
     const { data: { subscription } } = authService.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         setIsLoggedIn(true);
-        setUser(session.user);
+        setUser({
+          ...session.user,
+          email: session.user.email ?? ''
+        });
         loadAllData();
       } else if (event === 'SIGNED_OUT') {
         setIsLoggedIn(false);
@@ -109,9 +117,13 @@ function App() {
     try {
       const newCustomer = await customerService.create(customerData);
       setCustomers([newCustomer, ...customers]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding customer:', error);
-      alert(error.message || 'Error adding customer');
+      if (error instanceof Error) {
+        alert(error.message || 'Error adding customer');
+      } else {
+        alert('Error adding customer');
+      }
     }
   };
 
@@ -145,9 +157,13 @@ function App() {
     try {
       const newGlassware = await glasswareService.create(glasswareData);
       setGlassware([newGlassware, ...glassware]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding glassware:', error);
-      alert(error.message || 'Error adding glassware');
+      if (error instanceof Error) {
+        alert(error.message || 'Error adding glassware');
+      } else {
+        alert('Error adding glassware');
+      }
     }
   };
 
@@ -305,7 +321,17 @@ function App() {
       case 'reports':
         return <Reports customers={customers} glassware={glassware} orders={orders} />;
       default:
-        return <Dashboard stats={getDashboardStats()} />;
+        return (
+          <Dashboard 
+            stats={getDashboardStats()} 
+            customers={customers}
+            glassware={glassware}
+            orders={orders}
+            onAddCustomer={addCustomer}
+            onAddGlassware={addGlassware}
+            onAddOrder={addOrder}
+          />
+        );
     }
   };
 

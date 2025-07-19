@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Wine, ShoppingCart, FileText, BarChart3, LogOut, Settings, Package, Warehouse } from 'lucide-react';
+import { Users, Wine, ShoppingCart, FileText, BarChart3, LogOut, Package, Warehouse } from 'lucide-react';
 
 interface SidebarProps {
   activeSection: string;

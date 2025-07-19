@@ -171,12 +171,14 @@ export default function GlasswareManagement({
                         <button
                           onClick={() => handleEdit(item)}
                           className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded"
+                          title="Edit Glassware"
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => onDeleteGlassware(item.id)}
                           className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
+                          title="Delete Glassware"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -242,6 +244,8 @@ export default function GlasswareManagement({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.quantityAvailable}
                 onChange={(e) => setFormData({ ...formData, quantityAvailable: parseInt(e.target.value) })}
+                placeholder="Enter quantity available"
+                title="Quantity Available"
               />
             </div>
             <div>
@@ -256,6 +260,8 @@ export default function GlasswareManagement({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.pricePerUnit}
                 onChange={(e) => setFormData({ ...formData, pricePerUnit: parseInt(e.target.value) })}
+                title="Price per Unit (RWF)"
+                placeholder="Enter price per unit"
               />
             </div>
           </div>

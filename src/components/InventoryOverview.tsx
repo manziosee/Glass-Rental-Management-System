@@ -19,8 +19,33 @@ interface InventoryCategory {
 }
 
 export default function InventoryOverview({ glassware }: InventoryOverviewProps) {
+  // Hardcoded values for the "Individual Glass" category as per user request
+  const hardcodedCategory: InventoryCategory = {
+    name: 'Individual Glass',
+    individual: {
+      type: 'Individual Glass',
+      quantityAvailable: 96,
+      pricePerUnit: 450,
+    } as Glassware,
+    smallBox: {
+      type: 'Individual Glass Small Box',
+      quantityAvailable: 16,
+      pricePerUnit: 2700,
+    } as Glassware,
+    largeBox: {
+      type: 'Individual Glass Large Box',
+      quantityAvailable: 3, // updated from 2 to 3
+      pricePerUnit: 21600,
+    } as Glassware,
+    totalGlasses: 96,
+    color: 'bg-blue-500',
+    bgColor: 'bg-blue-50',
+    textColor: 'text-blue-700',
+  };
+
   const getInventoryCategories = (): InventoryCategory[] => {
     const categories = [
+      hardcodedCategory,
       {
         name: 'Beer Glasses',
         individual: glassware.find(g => g.type === 'Beer Glass'),
@@ -50,16 +75,6 @@ export default function InventoryOverview({ glassware }: InventoryOverviewProps)
         color: 'bg-purple-500',
         bgColor: 'bg-purple-50',
         textColor: 'text-purple-700',
-      },
-      {
-        name: 'Champagne Glasses',
-        individual: glassware.find(g => g.type === 'Champagne Glass'),
-        smallBox: glassware.find(g => g.type === 'Champagne Glass Small Box'),
-        largeBox: glassware.find(g => g.type === 'Champagne Glass Large Box'),
-        totalGlasses: 96,
-        color: 'bg-yellow-500',
-        bgColor: 'bg-yellow-50',
-        textColor: 'text-yellow-700',
       },
       {
         name: 'Champagne Glasses',
