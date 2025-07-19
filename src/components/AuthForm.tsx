@@ -68,21 +68,16 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
           setFormData({ email: '', password: '', confirmPassword: '', fullName: '' });
         }
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error('Auth error:', err);
-      if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
-        const message = (err as { message: string }).message;
-        if (message.includes('Invalid login credentials')) {
-          setError('Invalid email or password. Please try again.');
-        } else if (message.includes('User already registered')) {
-          setError('An account with this email already exists. Please login instead.');
-        } else if (message.includes('Email not confirmed')) {
-          setError('Please check your email and click the verification link before logging in.');
-        } else {
-          setError(message || 'An error occurred. Please try again.');
-        }
+      if (err.message?.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please try again.');
+      } else if (err.message?.includes('User already registered')) {
+        setError('An account with this email already exists. Please login instead.');
+      } else if (err.message?.includes('Email not confirmed')) {
+        setError('Please check your email and click the verification link before logging in.');
       } else {
-        setError('An error occurred. Please try again.');
+        setError(err.message || 'An error occurred. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -96,7 +91,7 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
       // Try to login with demo credentials
       await authService.signIn('admin@glassrental.com', 'admin123');
       onLogin();
-    } catch {
+    } catch (error) {
       // If demo user doesn't exist, create it
       try {
         const { error: signUpError } = await supabase.auth.signUp({
@@ -116,7 +111,7 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
         // Try to login again
         await authService.signIn('admin@glassrental.com', 'admin123');
         onLogin();
-      } catch {
+      } catch (createError: any) {
         setError('Demo login failed. Please try manual registration.');
       }
     } finally {
@@ -309,35 +304,6 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
               )}
             </button>
           </form>
-
-          {isLogin && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <p className="text-xs text-blue-600 text-center font-medium mb-2">
-                Demo Credentials
-              </p>
-              <p className="text-xs text-blue-500 text-center mb-3">
-                Email: admin@glassrental.com<br />
-                Password: admin123
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={fillDemoCredentials}
-                  className="flex-1 text-xs bg-blue-100 text-blue-700 py-2 px-3 rounded-md hover:bg-blue-200 transition-colors"
-                >
-                  Fill Demo Data
-                </button>
-                <button
-                  type="button"
-                  onClick={handleQuickDemo}
-                  disabled={loading}
-                  className="flex-1 text-xs bg-blue-600 text-white py-2 px-3 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {loading ? 'Loading...' : 'Quick Demo'}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer */}

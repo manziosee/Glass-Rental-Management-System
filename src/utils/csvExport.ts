@@ -1,4 +1,4 @@
-export function downloadCSV(data: Record<string, unknown>[], filename: string) {
+export function downloadCSV(data: any[], filename: string) {
   if (data.length === 0) {
     alert('No data to export');
     return;

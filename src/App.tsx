@@ -8,6 +8,7 @@ import GlasswareManagement from './components/GlasswareManagement';
 import OrderManagement from './components/OrderManagement';
 import InventoryOverview from './components/InventoryOverview';
 import Reports from './components/Reports';
+import StockManagement from './components/StockManagement';
 import { Customer, Glassware, Order, DashboardStats } from './types';
 import { authService } from './services/authService';
 import { customerService } from './services/customerService';
@@ -19,7 +20,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
+  const [user, setUser] = useState<any>(null);
   
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [glassware, setGlassware] = useState<Glassware[]>([]);
@@ -33,7 +34,7 @@ function App() {
     const { data: { subscription } } = authService.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         setIsLoggedIn(true);
-        setUser({ id: session.user.id, email: session.user.email ?? '' });
+        setUser(session.user);
         loadAllData();
       } else if (event === 'SIGNED_OUT') {
         setIsLoggedIn(false);
@@ -52,7 +53,7 @@ function App() {
       const session = await authService.getSession();
       if (session) {
         setIsLoggedIn(true);
-        setUser({ id: session.user.id, email: session.user.email ?? '' });
+        setUser(session.user);
         await loadAllData();
       }
     } catch (error) {
@@ -108,13 +109,9 @@ function App() {
     try {
       const newCustomer = await customerService.create(customerData);
       setCustomers([newCustomer, ...customers]);
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Error adding customer:', error);
-      if (error instanceof Error) {
-        alert(error.message || 'Error adding customer');
-      } else {
-        alert('Error adding customer');
-      }
+      alert(error.message || 'Error adding customer');
     }
   };
 
@@ -124,13 +121,9 @@ function App() {
       setCustomers(customers.map(customer => 
         customer.id === id ? updatedCustomer : customer
       ));
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Error updating customer:', error);
-      if (error instanceof Error) {
-        alert(error.message || 'Error updating customer');
-      } else {
-        alert('Error updating customer');
-      }
+      alert(error.message || 'Error updating customer');
     }
   };
 
@@ -140,13 +133,9 @@ function App() {
         await customerService.delete(id);
         setCustomers(customers.filter(customer => customer.id !== id));
         setOrders(orders.filter(order => order.customerId !== id));
-      } catch (error: unknown) {
+      } catch (error: any) {
         console.error('Error deleting customer:', error);
-        if (error instanceof Error) {
-          alert(error.message || 'Error deleting customer');
-        } else {
-          alert('Error deleting customer');
-        }
+        alert(error.message || 'Error deleting customer');
       }
     }
   };
@@ -274,6 +263,7 @@ function App() {
             stats={getDashboardStats()} 
             customers={customers}
             glassware={glassware}
+            orders={orders}
             onAddCustomer={addCustomer}
             onAddGlassware={addGlassware}
             onAddOrder={addOrder}
@@ -281,6 +271,8 @@ function App() {
         );
       case 'inventory':
         return <InventoryOverview glassware={glassware} />;
+      case 'stock':
+        return <StockManagement />;
       case 'customers':
         return (
           <CustomerManagement
@@ -318,14 +310,14 @@ function App() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100 relative">
       <Sidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
         onLogout={handleLogout}
         userEmail={user?.email}
       />
-      <div className="flex-1 overflow-auto bg-gray-50">
+      <div className="flex-1 overflow-auto bg-gray-50 lg:ml-0 ml-64">
         {renderActiveSection()}
       </div>
     </div>

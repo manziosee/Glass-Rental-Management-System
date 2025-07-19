@@ -68,7 +68,7 @@ export const customerService = {
   // Update a customer
   async update(id: string, updates: Partial<Customer>): Promise<Customer> {
     try {
-      const updateData: Record<string, unknown> = {};
+      const updateData: any = {};
       
       if (updates.name) updateData.name = updates.name;
       if (updates.email) updateData.email = updates.email;

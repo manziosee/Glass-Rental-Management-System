@@ -110,19 +110,19 @@ export default function CustomerManagement({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Customer
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                   Contact
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Event Details
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                   Created
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -130,44 +130,41 @@ export default function CustomerManagement({
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredCustomers.map((customer) => (
                 <tr key={customer.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{customer.name}</div>
-                      <div className="text-sm text-gray-500">{customer.eventType}</div>
+                      <div className="text-xs sm:text-sm text-gray-500">{customer.eventType}</div>
+                      <div className="text-xs text-gray-500 sm:hidden">{customer.email}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                     <div className="text-sm text-gray-900">{customer.email}</div>
                     <div className="text-sm text-gray-500">{customer.phone}</div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 sm:px-6 py-4">
                     <div className="flex items-center gap-2 text-sm text-gray-900 mb-1">
                       <Calendar className="h-4 w-4 text-gray-400" />
-                      {formatDate(customer.eventDate)}
+                      <span className="text-xs sm:text-sm">{formatDate(customer.eventDate)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <MapPin className="h-4 w-4 text-gray-400" />
-                      {customer.eventLocation}
+                      <span className="text-xs sm:text-sm truncate">{customer.eventLocation}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                     {formatDate(customer.createdAt)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center gap-2 justify-end">
                       <button
                         onClick={() => handleEdit(customer)}
                         className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded"
-                        title="Edit Customer"
-                        aria-label="Edit Customer"
                       >
                         <Edit2 className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onDeleteCustomer(customer.id)}
                         className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
-                        title="Delete Customer"
-                        aria-label="Delete Customer"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -200,8 +197,6 @@ export default function CustomerManagement({
               <input
                 type="text"
                 required
-                placeholder="Enter customer name"
-                title="Customer Name"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -214,8 +209,6 @@ export default function CustomerManagement({
               <input
                 type="email"
                 required
-                placeholder="Enter email address"
-                title="Email"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -231,26 +224,21 @@ export default function CustomerManagement({
               <input
                 type="tel"
                 required
-                placeholder="Enter phone number"
-                title="Phone"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               />
             </div>
             <div>
-              <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 mb-1">
-              Event Date
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Event Date
               </label>
               <input
-              id="eventDate"
-              type="date"
-              required
-              placeholder="Select event date"
-              title="Event Date"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value={formData.eventDate}
-              onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+                type="date"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value={formData.eventDate}
+                onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
               />
             </div>
           </div>
@@ -262,8 +250,6 @@ export default function CustomerManagement({
             <input
               type="text"
               required
-              placeholder="Enter event location"
-              title="Event Location"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               value={formData.eventLocation}
               onChange={(e) => setFormData({ ...formData, eventLocation: e.target.value })}
@@ -271,11 +257,10 @@ export default function CustomerManagement({
           </div>
 
           <div>
-            <label htmlFor="eventType" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Event Type
             </label>
             <select
-              id="eventType"
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               value={formData.eventType}
